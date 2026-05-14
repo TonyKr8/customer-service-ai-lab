@@ -1,0 +1,106 @@
+# --- Elasticsearch (גרסה קלה לבדיקות) ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticsearch
+  namespace: my-lab-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      containers:
+      - name: elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2
+        env:
+        - name: discovery.type
+          value: "single-node"
+        resources:
+          limits:
+            memory: "1Gi"
+        ports:
+        - containerPort: 9200
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  namespace: my-lab-project
+spec:
+  selector:
+    app: elasticsearch
+  ports:
+  - port: 9200
+    targetPort: 9200
+
+--- # --- Customer Service App (האתר הויזואלי) ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-app
+  namespace: my-lab-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-app
+  template:
+    metadata:
+      labels:
+        app: service-app
+    spec:
+      containers:
+      - name: app
+        # שים לב: כאן אתה מחליף את tonykr8 לשם המשתמש שלך בגיטהאב (באותיות קטנות)
+        image: ghcr.io/tonykr8/service-app:latest
+        env:
+        - name: ELASTICSEARCH_URL
+          value: "http://elasticsearch:9200"
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-app
+  namespace: my-lab-project
+spec:
+  selector:
+    app: service-app
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: NodePort # מאפשר גישה חיצונית דרך ה-IP של ה-Cluster
+
+--- # --- AI Log Agent (הסוכן החכם) ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-log-agent
+  namespace: my-lab-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-log-agent
+  template:
+    metadata:
+      labels:
+        app: ai-log-agent
+    spec:
+      containers:
+      - name: agent
+        image: ghcr.io/tonykr8/ai-agent:latest
+        env:
+        - name: ES_URL
+          value: "http://elasticsearch:9200"
+        - name: AI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-secret
+              key: api-key
