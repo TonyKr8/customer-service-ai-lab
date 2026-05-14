@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-app
+  template:
+    metadata:
+      labels:
+        app: service-app
+    spec:
+      containers:
+      - name: app
+        image: ghcr.io/YOUR_USER/service-app:latest
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-app
+spec:
+  selector:
+    app: service-app
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: NodePort

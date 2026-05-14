@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head><title>Customer Service Simulator</title></head>
+<body style="text-align: center; font-family: sans-serif; background: #f4f4f4;">
+    <h1>מוקד שירות לקוחות - סימולטור</h1>
+    <div style="border: 2px solid #333; padding: 20px; display: inline-block; background: white;">
+        <p id="status">השרת למעלה! לחץ כדי לייצר אינטראקציה</p>
+        <button onclick="triggerCall()" style="padding: 10px 20px; cursor: pointer;">ייצר שיחה נכנסת</button>
+    </div>
+    <script>
+        function triggerCall() {
+            fetch('/api/call').then(res => res.json()).then(data => {
+                document.getElementById('status').innerText = "פעולה: " + data.action;
+            });
+        }
+    </script>
+</body>
+</html>
